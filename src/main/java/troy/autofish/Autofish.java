@@ -42,6 +42,8 @@ public class Autofish {
 
     public int originalSlot = 0;
 
+    private long swapBestCooldown = 0;
+
     public Autofish(FabricModAutofish modAutofish) {
         this.modAutofish = modAutofish;
         this.client = MinecraftClient.getInstance();
@@ -65,6 +67,8 @@ public class Autofish {
            timeMillis = Util.getMeasuringTimeMs(); //update current working time for this tick
 
             if (isHoldingFishingRod()) {
+                handleRightClick(client);
+
                 if (client.player.fishHook != null) {
                     hookExists = true;
                     //MP catch listener
@@ -72,13 +76,23 @@ public class Autofish {
                         fishMonitorMP.hookTick(this, client, client.player.fishHook);
                     }
                 } else {
-                    originalSlot = client.player.getInventory().selectedSlot;
-//                    client.player.sendMessage(Text.of("Original: " + originalSlot));
                     removeHook();
                 }
             } else { //not holding fishing rod
                 removeHook();
             }
+        }
+    }
+
+    private void handleRightClick(MinecraftClient client) {
+        if(client.options.useKey.isPressed()){
+            if (System.currentTimeMillis() - swapBestCooldown < 1000){
+                return;
+            }
+            swapBestCooldown = System.currentTimeMillis();
+
+            originalSlot = client.player.getInventory().selectedSlot;
+            swapToBestRod();
         }
     }
 
@@ -219,24 +233,7 @@ public class Autofish {
     public void useRod() {
         if(client.player != null && client.world != null) {
 
-            PlayerInventory inventory = client.player.getInventory();
-            if (modAutofish.getConfig().isSwapBest()) {
-                if (!hookExists) {
-                    int best = 0;
-                    int bestSlot = originalSlot;
-                    for (int i = 0; i < 8; i++) {
-                        ItemStack itemStack = inventory.main.get(i);
-                        int level = getLureLevel(itemStack);
-                        if (level > best) {
-                            best = level;
-                            bestSlot = i;
-                        }
-                    }
-                    inventory.selectedSlot = bestSlot;
-                } else {
-                    inventory.selectedSlot = originalSlot;
-                }
-            }
+            swapToBestRod();
 
             Hand hand = getCorrectHand();
             ActionResult actionResult = client.interactionManager.interactItem(client.player, hand);
@@ -245,6 +242,27 @@ public class Autofish {
                     client.player.swingHand(hand);
                 }
                 client.gameRenderer.firstPersonRenderer.resetEquipProgress(hand);
+            }
+        }
+    }
+
+    private void swapToBestRod() {
+        PlayerInventory inventory = client.player.getInventory();
+        if (modAutofish.getConfig().isSwapBest()) {
+            if (!hookExists) {
+                int best = 0;
+                int bestSlot = originalSlot;
+                for (int i = 0; i < 8; i++) {
+                    ItemStack itemStack = inventory.main.get(i);
+                    int level = getLureLevel(itemStack);
+                    if (level > best) {
+                        best = level;
+                        bestSlot = i;
+                    }
+                }
+                inventory.selectedSlot = bestSlot;
+            } else {
+                inventory.selectedSlot = originalSlot;
             }
         }
     }
