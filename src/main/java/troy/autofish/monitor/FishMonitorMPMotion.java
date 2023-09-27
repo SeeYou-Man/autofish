@@ -3,7 +3,7 @@ package troy.autofish.monitor;
 import net.minecraft.block.Material;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.projectile.FishingBobberEntity;
-import net.minecraft.network.Packet;
+import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.EntityVelocityUpdateS2CPacket;
 import net.minecraft.util.function.MaterialPredicate;
 import net.minecraft.util.math.BlockPos;
@@ -22,7 +22,7 @@ public class FishMonitorMPMotion implements FishMonitorMP {
 
     // True if the bobber is in the water.
     private boolean hasHitWater = false;
-    
+
     // Time at which bobber begins to rise in the water.
     // 0 if the bobber has not rose in the water yet.
     private long bobberRiseTimestamp = 0;
