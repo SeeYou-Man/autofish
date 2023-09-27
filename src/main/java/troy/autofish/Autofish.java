@@ -2,14 +2,20 @@ package troy.autofish;
 
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.FishingRodItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.network.packet.Packet;
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.StringHelper;
 import net.minecraft.util.Hand;
@@ -19,6 +25,7 @@ import troy.autofish.monitor.FishMonitorMPMotion;
 import troy.autofish.monitor.FishMonitorMPSound;
 import troy.autofish.scheduler.ActionType;
 
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +39,8 @@ public class Autofish {
     private long hookRemovedAt = 0L;
 
     public long timeMillis = 0L;
+
+    public int originalSlot = 0;
 
     public Autofish(FabricModAutofish modAutofish) {
         this.modAutofish = modAutofish;
@@ -63,6 +72,8 @@ public class Autofish {
                         fishMonitorMP.hookTick(this, client, client.player.fishHook);
                     }
                 } else {
+                    originalSlot = client.player.getInventory().selectedSlot;
+//                    client.player.sendMessage(Text.of("Original: " + originalSlot));
                     removeHook();
                 }
             } else { //not holding fishing rod
@@ -190,8 +201,43 @@ public class Autofish {
         }
     }
 
+    public int getLureLevel(ItemStack itemStack){
+        NbtList enchantmentList = itemStack.getEnchantments();
+        for (NbtElement element : enchantmentList) {
+            if (element instanceof NbtCompound enchantment) {
+                if ("minecraft:lure".equals(enchantment.getString("id"))) {
+                    // The item has the Lure enchantment
+                    int level = enchantment.getInt("lvl");
+                    return level;
+                    // Do something with level
+                }
+            }
+        }
+        return 0;
+    }
+
     public void useRod() {
         if(client.player != null && client.world != null) {
+
+            PlayerInventory inventory = client.player.getInventory();
+            if (modAutofish.getConfig().isSwapBest()) {
+                if (!hookExists) {
+                    int best = 0;
+                    int bestSlot = originalSlot;
+                    for (int i = 0; i < 8; i++) {
+                        ItemStack itemStack = inventory.main.get(i);
+                        int level = getLureLevel(itemStack);
+                        if (level > best) {
+                            best = level;
+                            bestSlot = i;
+                        }
+                    }
+                    inventory.selectedSlot = bestSlot;
+                } else {
+                    inventory.selectedSlot = originalSlot;
+                }
+            }
+
             Hand hand = getCorrectHand();
             ActionResult actionResult = client.interactionManager.interactItem(client.player, hand);
             if (actionResult.isAccepted()) {

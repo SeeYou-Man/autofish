@@ -10,6 +10,7 @@ public class Config {
     @Expose boolean persistentMode = false;
     @Expose boolean useSoundDetection = false;
     @Expose boolean forceMPDetection = false;
+    @Expose boolean swapBest = false;
     @Expose long recastDelay = 1500;
     @Expose String clearLagRegex = "\\[ClearLag\\] Removed [0-9]+ Entities!";
 
@@ -32,6 +33,10 @@ public class Config {
     }
 
     public boolean isForceMPDetection() { return forceMPDetection; }
+
+    public boolean isSwapBest() {
+        return swapBest;
+    }
 
     public long getRecastDelay() {
         return recastDelay;
@@ -65,6 +70,10 @@ public class Config {
 
     public void setClearLagRegex(String clearLagRegex) {
         this.clearLagRegex = clearLagRegex;
+    }
+
+    public void setSwapBest(boolean swapBest) {
+        this.swapBest = swapBest;
     }
 
     /**

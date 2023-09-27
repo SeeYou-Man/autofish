@@ -155,6 +155,19 @@ public class AutofishScreenBuilder {
                 })
                 .build();
 
+        //Enable Force MP Detection
+        AbstractConfigListEntry toggleSwapBest = entryBuilder.startBooleanToggle(Text.of("Use Swap Best [BETA]"), config.isForceMPDetection())
+                .setDefaultValue(defaults.isPersistentMode())
+                .setTooltip(
+                        Text.of("Auto swap to Best rod when auto fishing"),
+                        Text.of("And swap back when catching")
+                )
+                .setSaveConsumer(newValue -> {
+                    modAutofish.getConfig().setSwapBest(newValue);
+                })
+                .setYesNoTextSupplier(yesNoTextSupplier)
+                .build();
+
 
         SubCategoryBuilder subCatBuilderBasic = entryBuilder.startSubCategory(Text.translatable("options.autofish.basic.title"));
         subCatBuilderBasic.add(toggleAutofish);
@@ -168,6 +181,7 @@ public class AutofishScreenBuilder {
         subCatBuilderAdvanced.add(toggleForceMPDetection);
         subCatBuilderAdvanced.add(recastDelaySlider);
         subCatBuilderAdvanced.add(clearLagRegexField);
+        subCatBuilderAdvanced.add(toggleSwapBest);
         subCatBuilderAdvanced.setExpanded(true);
 
         configCat.addEntry(subCatBuilderBasic.build());
